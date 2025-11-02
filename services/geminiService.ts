@@ -1,9 +1,7 @@
-
 import { GoogleGenAI, Modality } from "@google/genai";
 import { Gender, Age, AspectRatio } from '../types';
 // Impor MASTER_POSE_LIST yang baru
-// FIX: Import ASPECT_RATIO_DESCRIPTION_MAP to properly set the aspect ratio in the prompt.
-import { DESCRIPTOR_MAP, PROMPT_TEMPLATE, MASTER_POSE_LIST, ASPECT_RATIO_DESCRIPTION_MAP } from '../constants'; 
+import { DESCRIPTOR_MAP, PROMPT_TEMPLATE, MASTER_POSE_LIST } from '../constants'; 
 import { fileToGenerativePart } from '../utils/fileUtils';
 
 // Fungsi getApiKey tetap sama
@@ -35,7 +33,6 @@ export const generateEditorialImages = async (
   try {
     const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const descriptor = DESCRIPTOR_MAP[gender][age];
-    const aspectRatioDescription = ASPECT_RATIO_DESCRIPTION_MAP[aspectRatio];
 
     const productPart = await fileToGenerativePart(productImage);
     const logoPart = await fileToGenerativePart(logoImage);
@@ -51,8 +48,7 @@ export const generateEditorialImages = async (
       // 3. Buat prompt unik untuk setiap instruksi pose
       const prompt = PROMPT_TEMPLATE
         .replace('{descriptor}', descriptor)
-        // FIX: Use the correct aspect ratio description in the prompt.
-        .replace('{aspectRatioDescription}', aspectRatioDescription)
+        .replace('{aspectRatioDescription}', '') // Aspect ratio dikontrol oleh imageConfig, bukan prompt
         .replace('{poseInstruction}', pose); // Menggunakan placeholder pose baru
 
       // 4. Kembalikan promise panggilan API
@@ -67,7 +63,9 @@ export const generateEditorialImages = async (
         },
         config: {
           responseModalities: [Modality.IMAGE],
-          // FIX: Removed unsupported 'imageConfig' for 'gemini-2.5-flash-image' model. The aspect ratio is controlled by the prompt.
+          imageConfig: {
+            aspectRatio: aspectRatio
+          }
         },
       }).then(response => {
         // 5. Proses respons di dalam .then()
