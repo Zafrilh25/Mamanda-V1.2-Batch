@@ -78,6 +78,55 @@ type GeneratedBatch = {
   images: string[];
 }
 
+// --- FUNGSI HELPER BARU UNTUK WATERMARK ---
+const applyWatermark = (base64Image: string, logoFile: File, opacity = 0.5): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return reject(new Error('Failed to get canvas context'));
+
+    const mainImage = new Image();
+    mainImage.onload = () => {
+      canvas.width = mainImage.width;
+      canvas.height = mainImage.height;
+
+      // 1. Gambar gambar utama
+      ctx.drawImage(mainImage, 0, 0);
+
+      const logoImage = new Image();
+      logoImage.onload = () => {
+        // 2. Tentukan ukuran dan posisi logo (misal 15% dari lebar gambar, padding 2%)
+        const padding = mainImage.width * 0.02; // 2% padding
+        let logoWidth = mainImage.width * 0.15; // 15% dari lebar gambar
+        let logoHeight = logoImage.height * (logoWidth / logoImage.width);
+
+        // Cek jika logo terlalu tinggi
+        const maxHeight = mainImage.height * 0.15;
+        if (logoHeight > maxHeight) {
+            logoHeight = maxHeight;
+            logoWidth = logoImage.width * (logoHeight / logoImage.height);
+        }
+
+        const x = mainImage.width - logoWidth - padding;
+        const y = mainImage.height - logoHeight - padding;
+
+        // 3. Gambar logo dengan opacity
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+        ctx.globalAlpha = 1.0; // Reset opacity
+
+        // 4. Ekspor kembali ke base64 (gunakan image/jpeg untuk ukuran lebih kecil)
+        resolve(canvas.toDataURL('image/jpeg', 0.9)); // Kualitas 90%
+      };
+      logoImage.onerror = reject;
+      logoImage.src = URL.createObjectURL(logoFile);
+    };
+    mainImage.onerror = reject;
+    mainImage.src = base64Image;
+  });
+};
+// --- AKHIR FUNGSI HELPER ---
+
 const Generator: React.FC = () => {
   // State dari Tahap 1
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -213,8 +262,17 @@ const Generator: React.FC = () => {
     setGeneratedBatches([]);
 
     try {
+      // 1. Dapatkan gambar POLOS dari AI
       const images = await generateEditorialImages(productImage, logoImage, gender, age, aspectRatio);
-      setGeneratedImages(images);
+      
+      // 2. Terapkan watermark secara client-side
+      const watermarkedImages = await Promise.all(
+        images.map(imgBase64 => applyWatermark(imgBase64, logoImage, 0.5)) // 0.5 opacity
+      );
+
+      // 3. Simpan gambar yang SUDAH di-watermark ke state
+      setGeneratedImages(watermarkedImages);
+
     } catch (err: any) {
       setError(err.message || 'Gagal menghasilkan gambar. Silakan coba lagi.');
     } finally {
@@ -244,6 +302,7 @@ const Generator: React.FC = () => {
       setProcessingStatus(`Processing ${i + 1}/${productImages.length}: ${product.name}`);
       
       try {
+        // 1. Dapatkan gambar POLOS dari AI
         const images = await generateEditorialImages(
           product, 
           logoImage, 
@@ -252,9 +311,15 @@ const Generator: React.FC = () => {
           aspectRatio
         );
         
+        // 2. Terapkan watermark secara client-side
+        const watermarkedImages = await Promise.all(
+          images.map(imgBase64 => applyWatermark(imgBase64, logoImage, 0.5)) // 0.5 opacity
+        );
+        
+        // 3. Simpan gambar yang SUDAH di-watermark ke state
         setGeneratedBatches(prev => [
           ...prev,
-          { productName: product.name, images: images }
+          { productName: product.name, images: watermarkedImages }
         ]);
         
       } catch (err: any) {
@@ -296,7 +361,7 @@ const Generator: React.FC = () => {
         batch.images.forEach((src, index) => {
           const base64Data = src.split(',')[1];
           // Nama file di dalam folder
-          folder.file(`pose_${index + 1}.png`, base64Data, { base64: true });
+          folder.file(`pose_${index + 1}.jpeg`, base64Data, { base64: true });
         });
       });
 
@@ -306,7 +371,7 @@ const Generator: React.FC = () => {
       
       generatedImages.forEach((src, index) => {
         const base64Data = src.split(',')[1];
-        zip.file(`fashion_editorial_${index + 1}.png`, base64Data, { base64: true });
+        zip.file(`fashion_editorial_${index + 1}.jpeg`, base64Data, { base64: true });
       });
     }
     

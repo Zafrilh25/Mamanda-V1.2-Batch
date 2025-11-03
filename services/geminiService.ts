@@ -35,7 +35,7 @@ export const generateEditorialImages = async (
     const descriptor = DESCRIPTOR_MAP[gender][age];
 
     const productPart = await fileToGenerativePart(productImage);
-    const logoPart = await fileToGenerativePart(logoImage);
+    // const logoPart = await fileToGenerativePart(logoImage); // <-- HAPUS ATAU KOMENTARI INI
 
     // --- LOGIKA BARU DIMULAI DI SINI ---
 
@@ -48,7 +48,6 @@ export const generateEditorialImages = async (
       // 3. Buat prompt unik untuk setiap instruksi pose
       const prompt = PROMPT_TEMPLATE
         .replace('{descriptor}', descriptor)
-        .replace('{aspectRatioDescription}', '') // Aspect ratio dikontrol oleh imageConfig, bukan prompt
         .replace('{poseInstruction}', pose); // Menggunakan placeholder pose baru
 
       // 4. Kembalikan promise panggilan API
@@ -57,8 +56,7 @@ export const generateEditorialImages = async (
         contents: {
           parts: [
             { text: prompt },
-            productPart,
-            logoPart
+            productPart
           ],
         },
         config: {

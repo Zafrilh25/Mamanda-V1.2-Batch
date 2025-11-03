@@ -110,7 +110,7 @@ export const MASTER_POSE_LIST = [
   'Elegant finish pose, like a ballerina finishing a move, head tilted.'
 ];
 
-export const PROMPT_TEMPLATE = `Create an ultra-photorealistic cinematic editorial fashion portrait in a {aspectRatioDescription}.
+export const PROMPT_TEMPLATE = `Create an ultra-photorealistic cinematic editorial fashion portrait.
 The subject is a realistic {descriptor} Indonesian model wearing the exact, complete outfit (details, colors, fabric texture) 
 from the uploaded product photo.
 
@@ -124,10 +124,6 @@ and highlighting the outfit and the model's personality.
 
 Expression: calm, dreamy, and inviting, with subtle emotional depth fitting the cinematic tone.
 
-Watermark:
-Incorporate the exact uploaded logo as a subtle, semi-transparent watermark 
-in the bottom-right corner of the image. Maintain original proportions and natural blending.
-
 Aesthetic: dreamy Korean movie still — cinematic, soft airy atmosphere, pastel tones, subtle film grain.
 Lighting: diffused daylight, soft key light 45° left, gentle fill right, creamy shadows, subtle haze.
 Camera: cinematic full-frame look, 85mm lens, aperture f/2.8, ISO 100, shallow depth of field, 
@@ -135,7 +131,7 @@ eye-level framing.
 
 Negative Prompt:
 harsh shadows, direct sunlight, oversaturated colors, busy background, distorted anatomy, 
-unrealistic skin, cartoon, 3D render, poorly drawn hands, text, extra watermark, blurry product, mismatched outfit, mannequin, pedestal, stand, base, circular base, display stand, studio prop, podium.`;
+unrealistic skin, cartoon, 3D render, poorly drawn hands, text, extra watermark, blurry product, mismatched outfit, mannequin, posing stool.`;
 
 export const MAX_PRODUCT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const MAX_LOGO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
